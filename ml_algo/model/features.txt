@@ -1,0 +1,6 @@
+momentum30
+momentum60
+momentum120
+vs_quantile_binary
+vs_quantile_binary_freq
+divergence

@@ -1,0 +1,64 @@
+version: "3"
+
+services:
+  mongo:
+    image: mongo
+    restart: always
+    networks:
+      - app-net
+    ports:
+      - 27017:27017
+    volumes:
+      - data-vol:/docker-entrypoint-initdb.d
+
+  mongo_exp:
+    image: mongo-express
+    restart: always
+    networks:
+      - app-net
+    depends_on:
+      - mongo
+    ports:
+      - 8082:8081
+
+  python_app:
+    build:
+      context: database
+      dockerfile: Dockerfile
+    depends_on:
+      - mongo
+    networks:
+      - app-net
+    environment:
+      - HOST=${HOST}
+
+  ml_app:
+    build:
+      context: ml_algo
+      dockerfile: Dockerfile
+    restart: on-failure
+    depends_on:
+      - mongo
+    links:
+      - mongo
+    networks:
+      - app-net
+    ports:
+      - 8000:8000
+    environment:
+      - HOST=${HOST}
+      - SECTOR=${SECTOR}
+      - FLASK_HOST=${FLASK_HOST}
+      - FLASK_PORT=${FLASK_PORT}
+
+networks:
+  app-net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: ${SUBNET}
+          gateway: ${GATEWAY}
+
+volumes:
+  data-vol:
